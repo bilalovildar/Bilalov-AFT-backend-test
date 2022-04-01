@@ -1,6 +1,7 @@
 package Less3;
 
 import com.fasterxml.jackson.databind.introspect.TypeResolutionContext;
+import io.restassured.RestAssured;
 import io.restassured.path.json.JsonPath;
 import org.junit.jupiter.api.Test;
 
@@ -70,7 +71,72 @@ public class BackApiTest {
         assertThat(response.get("offset"), equalTo(0));
         assertThat(response.get("number"), equalTo(10));
         assertThat(response.get("totalResults"), equalTo(0));
-
     }
 
+    @Test
+    public void postRecipesCuisine1Test() {
+        given()
+                .queryParam("apiKey", apiKey)
+                .when().post("https://api.spoonacular.com/recipes/cuisine")
+                .then()
+                .assertThat().statusCode(200)
+                .and()
+                .body("cuisine", is("Mediterranean"));
+    }
+
+    @Test
+    public void postRecipesCuisineBodyTest() {
+        given()
+                .queryParam("apiKey", apiKey)
+                .body("{\n" +
+                        "    \"title\": \"Chicken Spinach Mozzarella\",\n" +
+                        "    \"ingredientList\": \"4 oz pork shoulder\",\n" +
+                        "    \"language\": \"en\"\n" +
+                        "}")
+                .when().post("https://api.spoonacular.com/recipes/cuisine")
+                .then()
+                .assertThat().statusCode(200)
+                .and()
+                .body("confidence", is(0.0F));
+    }
+
+    @Test
+    public void postRecipesCuisineEmptyBodyTest() {
+        given()
+                .queryParam("apiKey", apiKey)
+                .body(" ")
+                .when().post("https://api.spoonacular.com/recipes/cuisine")
+                .then()
+                .assertThat().statusCode(200)
+                .and()
+                .body("confidence", is(0.0F));
+    }
+
+    @Test
+    public void postRecipesCuisineWrongBody4Test() {
+        given()
+                .queryParam("apiKey", apiKey)
+                .body("ubeebebeceuippp")
+                .when().post("https://api.spoonacular.com/recipes/cuisine")
+                .then()
+                .assertThat().statusCode(200);
+    }
+
+    @Test
+    public void postRecipesCuisine5Test() {
+        given()
+                .queryParam("apiKey", apiKey)
+                .queryParam("title", "Pie")
+                .queryParam("ingredientList", "10 oz bread and 40 oz apple")
+                .body("{\n" +
+                        "    \"language\": \"en\"\n" +
+                        "}")
+                .when().post("https://api.spoonacular.com/recipes/cuisine")
+                .then()
+                .assertThat().statusCode(200)
+                .and()
+                .body("confidence", is(0.0F));
+    }
 }
+
+

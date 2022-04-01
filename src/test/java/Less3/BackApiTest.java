@@ -137,6 +137,47 @@ public class BackApiTest {
                 .and()
                 .body("confidence", is(0.0F));
     }
+
+    @Test
+    void addmealplannerTest() {
+        String id = given()
+                .queryParam("hash", "a3da66460bfb7e62ea1c96cfa0b7a634a346ccbf")
+                .queryParam("apiKey", apiKey)
+                .body("{\n" +
+                        "    \"date\": 1589500800,\n" +
+                        "    \"slot\": 1,\n" +
+                        "    \"position\": 0,\n" +
+                        "    \"type\": \"INGREDIENTS\",\n" +
+                        "    \"value\": {\n" +
+                        "        \"ingredients\": [\n" +
+                        "            {\n" +
+                        "                \"name\": \"1 banana\"\n" +
+                        "            },\n" +
+                        "            {\n" +
+                        "                \"name\": \"coffee\",\n" +
+                        "                \"unit\": \"cup\",\n" +
+                        "                \"amount\": \"1\",\n" +
+                        "                \"image\": \"https://spoonacular.com/cdn/ingredients_100x100/brewed-coffee.jpg\"\n" +
+                        "            },\n" +
+                        "        ]\n" +
+                        "    }\n" +
+                        "}")
+                .when()
+                .post("https://api.spoonacular.com/mealplanner/geekbrains/items")
+                .then()
+                .statusCode(200)
+                .extract()
+                .jsonPath()
+                .get("id")
+                .toString();
+
+        given()
+                .queryParam("hash", "a3da66460bfb7e62ea1c96cfa0b7a634a346ccbf")
+                .queryParam("apiKey", apiKey)
+                .delete("https://api.spoonacular.com/mealplanner/geekbrains/items/" + id)
+                .then()
+                .statusCode(200);
+    }
 }
 
 

@@ -1,17 +1,40 @@
-package Less3;
+package Less4;
 
-import com.fasterxml.jackson.databind.introspect.TypeResolutionContext;
-import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.builder.ResponseSpecBuilder;
+import io.restassured.filter.log.LogDetail;
+import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
+import io.restassured.specification.RequestSpecification;
+import io.restassured.specification.ResponseSpecification;
+import lesson4.Response;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class BackApiTest {
+public class BackApi4Test {
     private final String apiKey = "5b8b1b3075534a30b782cd489219e17a";
+    ResponseSpecification responseSpecification = null;
+    RequestSpecification requestSpecification = null;
+
+    @BeforeEach
+    void beforeTest() {
+        requestSpecification = new RequestSpecBuilder()
+                .addQueryParam("apiKey", apiKey)
+                .log(LogDetail.ALL)
+                .build();
+
+        responseSpecification = new ResponseSpecBuilder()
+//                .expectStatusCode(200)
+//                .expectStatusLine("HTTP/1.1 200 OK")
+                .expectContentType(ContentType.JSON)
+                .expectResponseTime(Matchers.lessThan(5000L))
+                .build();
+    }
 
     @Test
     void getNoAuthNegativeTest() {
@@ -20,30 +43,31 @@ public class BackApiTest {
                 .get("https://api.spoonacular.com/recipes/complexSearch?" +
                         "apiKey=45646545")
                 .then()
+                .spec(responseSpecification)
                 .statusCode(401);
     }
 
     @Test
     void getAuthPozitiveTest() {
-        given()
+        given().spec(requestSpecification)
                 .when()
-                .get("https://api.spoonacular.com/recipes/complexSearch?" +
-                        "apiKey=" + apiKey)
+                .get("https://api.spoonacular.com/recipes/complexSearch")
                 .then()
+                .spec(responseSpecification)
                 .statusCode(200);
     }
 
     @Test
     void getRecipeCheckBurgerTitleTest() {
-        JsonPath response = given()
-                .queryParam("apiKey", apiKey)
+        Response response = given().spec(requestSpecification)
                 .queryParam("query", "burger")
                 .when()
-                .get("https://api.spoonacular.com/recipes/complexSearch")
+                .get("https://api.spoonacular.com/recipes/complexSearch").prettyPeek()
+                .then()
+                .extract()
                 .body()
-                .jsonPath()
-                .prettyPeek();
-        assertThat(response.get("results.title[0]"), equalTo("Falafel Burger"));
+                .as(Response.class);
+        assertThat(response.results[0].getTitle(), containsString("Falafel Burger"));
     }
 
     @Test
